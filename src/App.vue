@@ -87,6 +87,14 @@ const { useState, useGetter, useAction, useStore: useTodos } = createPiniaCompos
 /* ~~~ */
 
 useState('todos', [])
+useState('nextId', 0)
+useAction(
+  'addTodo',
+  store =>
+    text => {
+      store.todos.push({ text, id: store.nextId++, isFinished: false })
+    }
+)
 
 /* ~~~ */
 
@@ -110,17 +118,6 @@ useAction(
   'unfinishTodo',
   store =>
     findTodo => store.todos.find(findTodo).isFinished = false
-)
-
-/* ~~~ */
-
-useState('nextId', 0)
-useAction(
-  'addTodo',
-  store =>
-    text => {
-      store.todos.push({ text, id: store.nextId++, isFinished: false })
-    }
 )
 
 /* ~~~ */
