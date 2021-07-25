@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue'
-import { createPiniaComposition } from './pinia-composition'
+import { usePiniaSetup } from './pinia-composition'
 import { CheckCircleIcon } from '@heroicons/vue/solid'
 import { Switch } from '@headlessui/vue'
 
@@ -82,57 +82,61 @@ const exampleTodos = [
   'Experiment with Pinia Composition'
 ]
 
-const { useState, useGetter, useAction, useStore: useTodos } = createPiniaComposition('todos')
+type Todo = { text: string, id: number, isFinished: boolean }
 
-/* ~~~ */
+const useTodos = usePiniaSetup('todos', ({ state, getter, action }) => {
+  const todos = state<Todo[]>([]),
+        nextId = state(0),
+        addTodo = action(
+          (text: string) => todos.value.push({ text, id: nextId.value++, isFinished: false })
+        )
 
-useState('todos', [])
-useState('nextId', 0)
-useAction(
-  'addTodo',
-  store =>
-    text => {
-      store.todos.push({ text, id: store.nextId++, isFinished: false })
-    }
-)
+  /* ~~~ */
 
-/* ~~~ */
+  const finishedTodos = getter(() => todos.value.filter((todo) => todo.isFinished)),
+        finishTodo = action(
+          (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) =>
+            todos.value.find(findTodo).isFinished = true
+        )
+  
+  /* ~~~ */
+  
+  const unfinishedTodos = getter(() => todos.value.filter((todo) => !todo.isFinished)),
+        unfinishTodo = action(
+          (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) =>
+            todos.value.find(findTodo).isFinished = false
+        )
+  
+  /* ~~~ */
 
-useGetter(
-  'finishedTodos',
-  state => state.todos.filter((todo) => todo.isFinished)
-)
-useAction(
-  'finishTodo',
-  store =>
-    findTodo => store.todos.find(findTodo).isFinished = true
-)
+  const filter = state<'all' | 'finished' | 'unfinished'>('all')
+        const filteredTodos = getter(
+          () => {
+            switch (filter.value) {
+              case 'all':
+                return todos.value
+              case 'finished':
+                return finishedTodos.value
+              case 'unfinished':
+                return unfinishedTodos.value
+            }
+          }
+        )
 
-/* ~~~ */
+  return {
+    todos,
+    nextId,
+    addTodo,
 
-useGetter(
-  'unfinishedTodos',
-  state => state.todos.filter((todo) => !todo.isFinished)
-)
-useAction(
-  'unfinishTodo',
-  store =>
-    findTodo => store.todos.find(findTodo).isFinished = false
-)
+    finishedTodos,
+    finishTodo,
 
-/* ~~~ */
+    unfinishedTodos,
+    unfinishTodo,
 
-useState('filter', 'all')
-useGetter(
-  'filteredTodos',
-  state => {
-    if (state.filter === 'finished') {
-      // call other getters with autocompletion ✨
-      return state.finishedTodos
-    } else if (state.filter === 'unfinished') {
-      return state.unfinishedTodos
-    }
-    return state.todos
+    filter,
+    filteredTodos,
   }
-)
+})
+
 </script>

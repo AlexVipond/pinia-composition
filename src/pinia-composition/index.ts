@@ -1,50 +1,32 @@
+import { computed, reactive } from 'vue'
+import type { ComputedRef, WritableComputedRef } from 'vue'
 import { defineStore } from 'pinia'
 
-export function createPiniaComposition (id) {
-  const state = {},
-        getters = {},
-        createActions = new Map()
+type Setup = (api: SetupApi) => object
 
-  const useState = (key: string, initialState) => {
-    state[key] = initialState
-  }
+type SetupApi = {
+  state: <T>(initialValue: T) => WritableComputedRef<T>,
+  getter: <T>(getter: () => T) => ComputedRef<T>,
+  action: <T extends Function>(action: T) => T,
+}
 
-  const useGetter = (key: string, getter) => {
-    getters[key] = getter
-  }
-
-  const useAction = (key: string, createAction) => {
-    createActions.set(key, createAction)
-  }
-
-  const useStore = () => {
-    const store = defineStore({
-      id,
-      state: () => state,
-      getters: getters,
-      actions: (() => {
-        const tree = {}
-
-        for (const [key] of createActions) {
-          tree[key] = () => {}
-        }
-
-        return tree
-      })(),
-    })()
-
-    const actions: Record<string, Function> = {}
-    
-    for (const [key, createAction] of createActions) {
-      actions[key] = createAction(store)
+export function usePiniaSetup (id: string, setup: Setup) {
+  function toDefineStoreOptions (bindings) {
+    return {
+      state: () => ({}),
+      getters: {},
+      actions: {}
     }
-
-    store.$onAction(({ name, args }) => {
-      actions[name](...args)
-    })
-
-    return store
+  }
+  
+  const setupApi: SetupApi = {
+    state: initialValue => computed(() => initialValue),
+    getter: getter => computed(getter),
+    action: action => action,
   }
 
-  return { useState, useGetter, useAction, useStore }
+  return defineStore({
+    id,
+    ...toDefineStoreOptions(setup(setupApi))
+  })
 }
