@@ -84,6 +84,8 @@ const exampleTodos = [
 
 const { useState, useGetter, useAction, useStore: useTodos } = createPiniaComposition('todos')
 
+/* ~~~ */
+
 useState('todos', [])
 
 /* ~~~ */
