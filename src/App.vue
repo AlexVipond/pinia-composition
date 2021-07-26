@@ -84,28 +84,20 @@ const exampleTodos = [
 
 type Todo = { text: string, id: number, isFinished: boolean }
 
-const useTodos = usePiniaSetup('todos', ({ state, getter, action }) => {
+const useTodos = usePiniaSetup('todos', ({ state, getter }) => {
   const todos = state<Todo[]>([]),
         nextId = state(0),
-        addTodo = action(
-          (text: string) => todos.value.push({ text, id: nextId.value++, isFinished: false })
-        )
-
+        addTodo = (text: string) => todos.value.push({ text, id: nextId.value++, isFinished: false })
+        
   /* ~~~ */
 
   const finishedTodos = getter(() => todos.value.filter((todo) => todo.isFinished)),
-        finishTodo = action(
-          (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) =>
-            todos.value.find(findTodo).isFinished = true
-        )
+        finishTodo = (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) => todos.value.find(findTodo).isFinished = true
   
   /* ~~~ */
   
   const unfinishedTodos = getter(() => todos.value.filter((todo) => !todo.isFinished)),
-        unfinishTodo = action(
-          (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) =>
-            todos.value.find(findTodo).isFinished = false
-        )
+        unfinishTodo = (findTodo: (item: Todo, index: number, array: Todo[]) => boolean) => todos.value.find(findTodo).isFinished = false
   
   /* ~~~ */
 
